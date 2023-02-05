@@ -7,6 +7,8 @@ This is a userscript that enhances the experience of using the KNTU VC.
 
 - Fixes the width of dropdown menus to prevent them from being cut off.
 - Adds the notice board's page details inside the course page for easy access.
+- Adds Class Schedule and Exam Schedule to the header.
+- Adds Teacher's name alongside the course name in the course page. 
 
 ## Installation
 
