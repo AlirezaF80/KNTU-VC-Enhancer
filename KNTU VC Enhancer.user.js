@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KNTU VC Enhancer
 // @namespace    http://vc.kntu.ac.ir/
-// @version      0.2
+// @version      0.3
 // @description  Adds new features and fixes bugs of KNTU VC
 // @author       AlirezaF
 // @match        *://vc4012.kntu.ac.ir/*
