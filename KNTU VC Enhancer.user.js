@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KNTU VC Enhancer
 // @namespace    http://vc.kntu.ac.ir/
-// @version      0.3
+// @version      0.4
 // @description  Adds new features and fixes bugs of KNTU VC
 // @author       AlirezaF
 // @match        *://vc4012.kntu.ac.ir/*
@@ -16,22 +16,25 @@
 // ==/UserScript==
 (function() {
     'use strict';
-    function getHTMLDoc(url){
+    function getHTMLDoc(url, callback){
         var xhr = new XMLHttpRequest();
-        xhr.open("GET", url, false);
+        xhr.open("GET", url, true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                var response = xhr.responseText;
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(response, "text/html");
+                callback(doc);
+            }
+        };
         xhr.send();
-        var response = xhr.responseText;
-        var parser = new DOMParser();
-        var doc = parser.parseFromString(response, "text/html");
-        return doc;
     }
     function fixDropdownMenuWidth() {
-        // find all divs with class="dropdown-menu ..." and set max-width=350px
+        // find all divs with class="dropdown-menu ..."
         var divs = document.getElementsByClassName("dropdown-menu")
-        // console.log(divs);
-        for(var i = 0; i < divs.length; i++) {
-            divs[i].setAttribute("style", "max-width: 300px;");
-        }
+        // for(var i = 0; i < 1; i++) {
+        divs[0].setAttribute("style", "left: -100%;");
+        // }
     }
     function addNoticeBoard(){
         // add notice board's page details inside the course's page
@@ -44,13 +47,15 @@
             if(as.length > 0) noticeBoardUrl = as[0].href;
         }
         if(noticeBoardUrl == null) return;
-        // get the div with role="main" inside noticeBoardUrl
-        var doc = getHTMLDoc(noticeBoardUrl);
-        var mainDiv = doc.querySelector("div[role='main']");
-        // add the mainDiv to the current page
-        var mainDivs = document.querySelectorAll("div[class='course-content']");
-        // add the mainDiv as the first child of the first mainDiv
-        mainDivs[0].prepend(mainDiv);
+
+        getHTMLDoc(noticeBoardUrl, function(doc){
+            // get the div with role="main" inside noticeBoardUrl
+            var mainDiv = doc.querySelector("div[role='main']");
+            // add the mainDiv to the current page
+            var mainDivs = document.querySelectorAll("div[class='course-content']");
+            // add the mainDiv as the first child of the first mainDiv
+            mainDivs[0].prepend(mainDiv);
+        });
     }
     function addCourseDescription(){
         // get course description
@@ -99,43 +104,50 @@
         var divs = document.getElementsByClassName("activityinstance");
         if (divs.length == 0) return;
         // for each div, find the first a tag, get the href attribute
-        for(var i = 0; i < divs.length; i++){
-            var as = divs[i].getElementsByTagName("a");
-            if(as.length == 0) continue;
-            var url = as[0].href;
-            if (!url.includes('mod/assign')) continue;
-            // get the div with class="submissionstatustable" inside the url
-            var doc = getHTMLDoc(url);
-            var submissionstatustable = doc.getElementsByClassName("submissionstatustable");
-            if(submissionstatustable.length == 0) continue;
-            var trs = submissionstatustable[0].getElementsByTagName("tr");
-            if(trs.length < 4) continue;
-            var tds = trs[trs.length-3].getElementsByTagName("td");
-            if(tds.length == 0) continue;
-            var classList = tds[0].classList;
-            var backCol, fontCol;
-            if (classList.contains("earlysubmission")){
-                backCol = "#cfefcf";
-                fontCol = "#0f4d0f";
-            } else if (classList.contains("latesubmission")){
-                as[0].innerHTML += " (با تاخیر)";
-                backCol = "#ffff99";
-                fontCol = "#666600";
-            } else if (classList.contains("overdue")){
-                backCol = "#efcfcf";
-                fontCol = "#660000";
-            }
-            if (backCol != null && fontCol != null){
-                divs[i].style.backgroundColor = backCol;
-                as[0].style.color = fontCol;
-            }
-            // get the submission date
-            var tds2 = trs[trs.length-4].getElementsByTagName("td");
-            if(tds2.length == 0) continue;
-            var submissionDate = tds2[0].innerText;
-            // add submission date to the a tag
-            as[0].innerHTML += " - " + submissionDate;
-        }
+        for (var i = 0; i < divs.length; i++) {
+            (function(i) {
+              var as = divs[i].getElementsByTagName("a");
+              if (as.length == 0) return;
+              var url = as[0].href;
+              if (!url.includes('mod/assign')) return;
+              getHTMLDoc(url, function(doc) {
+                    var submissionstatustable = doc.getElementsByClassName("submissionstatustable");
+                    if (submissionstatustable.length == 0) return;
+                    var trs = submissionstatustable[0].getElementsByTagName("tr");
+                    if (trs.length < 4) return;
+                    // submittion status
+                    var tds = trs[0].getElementsByTagName("td");
+                    var status = tds[0].classList.contains("submissionstatussubmitted") ? "تحویل داده شده" : "تحویل داده نشده";
+                    as[0].innerHTML += " " + status;
+                    // submittion time
+                    var tds = trs[3].getElementsByTagName("td");
+                    var classList = tds[0].classList;
+                    var backCol, fontCol;
+                    if (classList.contains("earlysubmission")) {
+                        // set color to green
+                        backCol = "#cfefcf";
+                        fontCol = "#0f4d0f";
+                    } else if (classList.contains("latesubmission")) {
+                        // set color to yellow
+                        as[0].innerHTML += " (با تاخیر)";
+                        backCol = "#ffff99";
+                        fontCol = "#666600";
+                    } else if (classList.contains("overdue")) {
+                        // set color to red
+                        backCol = "#efcfcf";
+                        fontCol = "#660000";
+                    }
+                    if (backCol != null && fontCol != null) {
+                        divs[i].style.backgroundColor = backCol;
+                        as[0].style.color = fontCol;
+                    }
+                    // submission date
+                    var tds2 = trs[2].getElementsByTagName("td");
+                    var submissionDate = tds2[0].innerText;
+                    as[0].innerHTML += " - " + submissionDate;
+              });
+            })(i);
+          }          
     }
     var url = window.location.href;
     // if we are in a course page
