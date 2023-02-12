@@ -120,7 +120,7 @@
                     var status = tds[0].classList.contains("submissionstatussubmitted") ? "تحویل داده شده" : "تحویل داده نشده";
                     as[0].innerHTML += " " + status;
                     // submittion time
-                    var tds = trs[3].getElementsByTagName("td");
+                    tds = trs[3].getElementsByTagName("td");
                     var classList = tds[0].classList;
                     var backCol, fontCol;
                     if (classList.contains("earlysubmission")) {
