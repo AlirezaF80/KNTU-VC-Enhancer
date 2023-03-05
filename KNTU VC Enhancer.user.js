@@ -11,7 +11,7 @@
 // @match        *://vc3992.kntu.ac.ir/*
 // @match        *://vc3991.kntu.ac.ir/*
 // @match        *://vc*.kntu.ac.ir/
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=ac.ir
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=kntu.ac.ir
 // @grant        none
 // ==/UserScript==
 JalaliDate = {
