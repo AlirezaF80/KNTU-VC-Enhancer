@@ -10,7 +10,9 @@ This is a userscript that enhances the experience of using the KNTU VC.
 - Adds Class Schedule and Exam Schedule to the header.
 - Adds Teacher's name alongside the course name in the course page.
 - Adds Assignment Submission Status in the course page.
-- Adds an "Add to Calendar" button to assignments' pages. (Experimental) **Note: Be careful when using this button. It is experimental and dates may be wrong. It is recommended to check the dates before adding them to your calendar.**
+- Adds an "Add to Calendar" button to assignments' pages. (Experimental)
+
+**Note: Be careful when using this button. It is experimental and dates may be wrong. It is recommended to check the dates before adding them to your calendar.**
 
 
 ## Installation
