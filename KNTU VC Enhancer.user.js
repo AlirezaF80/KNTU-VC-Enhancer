@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KNTU VC Enhancer
 // @namespace    http://vc.kntu.ac.ir/
-// @version      0.4
+// @version      0.5
 // @description  Adds new features and fixes bugs of KNTU VC
 // @author       AlirezaF
 // @match        *://vc4012.kntu.ac.ir/*
@@ -14,6 +14,61 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=ac.ir
 // @grant        none
 // ==/UserScript==
+JalaliDate = {
+    g_days_in_month: [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
+    j_days_in_month: [31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29],
+    MONTHS: ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"]
+};
+JalaliDate.toGregorian = function(j_y, j_m, j_d) {
+    j_y = parseInt(j_y);
+    j_m = parseInt(j_m);
+    j_d = parseInt(j_d);
+    var jy = j_y - 979;
+    var jm = j_m - 1;
+    var jd = j_d - 1;
+
+    var j_day_no = 365 * jy + parseInt(jy / 33) * 8 + parseInt((jy % 33 + 3) / 4);
+    for (var i = 0; i < jm; ++i) j_day_no += JalaliDate.j_days_in_month[i];
+
+    j_day_no += jd;
+
+    var g_day_no = j_day_no + 79;
+
+    var gy = 1600 + 400 * parseInt(g_day_no / 146097); /* 146097 = 365*400 + 400/4 - 400/100 + 400/400 */
+    g_day_no = g_day_no % 146097;
+
+    var leap = true;
+    if (g_day_no >= 36525) /* 36525 = 365*100 + 100/4 */
+    {
+        g_day_no--;
+        gy += 100 * parseInt(g_day_no / 36524); /* 36524 = 365*100 + 100/4 - 100/100 */
+        g_day_no = g_day_no % 36524;
+
+        if (g_day_no >= 365) g_day_no++;
+        else leap = false;
+    }
+
+    gy += 4 * parseInt(g_day_no / 1461); /* 1461 = 365*4 + 4/4 */
+    g_day_no %= 1461;
+
+    if (g_day_no >= 366) {
+        leap = false;
+
+        g_day_no--;
+        gy += parseInt(g_day_no / 365);
+        g_day_no = g_day_no % 365;
+    }
+
+    for (var i = 0; g_day_no >= JalaliDate.g_days_in_month[i] + (i == 1 && leap); i++)
+    g_day_no -= JalaliDate.g_days_in_month[i] + (i == 1 && leap);
+    var gm = i + 1;
+    var gd = g_day_no + 1;
+
+    gm = gm < 10 ? "0" + gm : gm;
+    gd = gd < 10 ? "0" + gd : gd;
+
+    return [gy, gm, gd];
+};
 (function() {
     'use strict';
     function getHTMLDoc(url, callback){
@@ -147,8 +202,151 @@
                     as[0].innerHTML += " - " + submissionDate;
               });
             })(i);
-          }          
+          }
     }
+
+    function getCalendarButton(name, date){
+        var button = document.createElement("button");
+        button.innerHTML = "اضافه کردن به تقویم";
+        button.onclick = function(){
+            var url = "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + name + "&dates=" + date;
+            window.open(url, '_blank');
+        }
+        // add "btn btn-primary" to button's class
+        button.setAttribute("class", "btn btn-primary");
+        // set it to the left side
+        button.style.float = "left";
+        return button;
+    }
+    function parseDateText(dateText){
+        var dueDateParts = dateText.split('، ');
+        var date = dueDateParts[0].trim();
+        var time = dueDateParts[1].trim();
+        // get persian date
+        var dateParts = date.split(' ');
+        var j_day = parseInt(dateParts[0]);
+        var j_monthText = dateParts[1];
+        var j_year = parseInt(dateParts[2]);
+        var j_month = 0;
+        for (var i = 0; i < JalaliDate.MONTHS.length; i++) {
+            if (JalaliDate.MONTHS[i] == j_monthText) {
+                j_month = i + 1;
+                break;
+            }
+        }
+        // get time
+        var timeParts = time.split(' ');
+        var hour = parseInt(timeParts[0].split(':')[0]);
+        var minute = parseInt(timeParts[0].split(':')[1]);
+        var amPM = timeParts[1];
+        if (amPM == "عصر") {
+            hour += 12;
+        }
+        return [j_year, j_month, j_day, hour, minute];
+    }
+    function convertToGregorian(j_year, j_month, j_day, hour, minute){
+        // convert jalali date to gregorian date
+        var gregorianDate = JalaliDate.toGregorian(j_year, j_month, j_day);
+        var greg_year = gregorianDate[0];
+        var greg_month = gregorianDate[1];
+        var greg_day = gregorianDate[2];
+        
+        // convert time to UTC
+        // get current time zone
+        var timeZone = new Date().getTimezoneOffset();
+        hour += (timeZone - timeZone % 60) / 60;
+        minute += timeZone % 60;
+        if (minute < 0) {
+            minute += 60;
+            hour -= 1;
+        }
+        if (hour < 0) {
+            hour += 24;
+            greg_day -= 1;
+        }
+        if (greg_day < 1) {
+            greg_month -= 1;
+            if (greg_month < 1) {
+                greg_month += 12;
+                greg_year -= 1;
+            }
+            greg_day = JalaliDate.g_days_in_month[greg_month - 1];
+        }
+        if (greg_month < 1) {
+            greg_month += 12;
+            greg_year -= 1;
+        }
+        return new Date(greg_year, greg_month - 1, greg_day, hour, minute);
+    }
+    function getCalendarFormatedDate(date){
+        var greg_year = date.getFullYear();
+        var greg_month = date.getMonth() + 1;
+        var greg_day = date.getDate();
+        var hour = date.getHours();
+        var minute = date.getMinutes();
+        if (hour < 10) hour = "0" + hour;
+        if (minute < 10) minute = "0" + minute;
+        if (greg_month < 10) greg_month = "0" + greg_month;
+        if (greg_day < 10) greg_day = "0" + greg_day;
+        return greg_year + "" + greg_month + "" + greg_day + "T" + hour + minute + "00" + "Z";
+    }
+    function addCalendarButton(){ // add a button to the page to add the assignment to the google calendar
+        // find course's name, div with class="page-header-headings"
+        var divs2 = document.getElementsByClassName("page-header-headings");
+        if (divs2.length == 0) return;
+
+        // find h1 tag inside the div
+        var h1s = divs2[0].getElementsByTagName("h1");
+        var courseName = h1s[0].innerHTML.split("-")[0].trim();
+
+        // find assignment's name, the first h2
+        var h2s = document.getElementsByTagName("h2");
+        var assignmentName = h2s[0].innerHTML;
+
+        // find due date
+        // find table with class="generaltable"
+        var tables = document.getElementsByClassName("generaltable");
+        // find tr with th="مهلت تحویل"
+        var trs = tables[0].getElementsByTagName("tr");
+        var tr = null;
+        for (var i = 0; i < trs.length; i++) { // find the row with "مهلت تحویل"
+            var ths = trs[i].getElementsByTagName("th");
+            if (ths.length == 0) continue;
+            if (ths[0].innerHTML == "مهلت تحویل") {
+                tr = trs[i];
+                break;
+            }
+        }
+        if (tr == null) return; // no due date found
+        var tds = tr.getElementsByTagName("td");
+        if (tds.length == 0) return; // no due date found
+        var dueDateText = tds[0].innerHTML; 
+        // get the rest of string after the first comma
+        var dueDateText = dueDateText.substring(dueDateText.indexOf('، ') + 1);
+        var dueParsedDate = parseDateText(dueDateText);
+        var dueGregDate = convertToGregorian(dueParsedDate[0], dueParsedDate[1], dueParsedDate[2], dueParsedDate[3], dueParsedDate[4]);
+        var dueDate = getCalendarFormatedDate(dueGregDate);
+        
+        // get submission date, find div with class="fileuploadsubmissiontime"
+        var divs3 = document.getElementsByClassName("fileuploadsubmissiontime");
+        var submissionDate = getCalendarFormatedDate(new Date()); // set current date as submission date
+        if (divs3.length != 0) {
+            // find span inside the div
+            var submissionDateText = divs3[0].innerHTML;
+            var subParsedDate = parseDateText(submissionDateText);
+            var submissionGregDate = convertToGregorian(subParsedDate[0], subParsedDate[1], subParsedDate[2], subParsedDate[3], subParsedDate[4]);
+            submissionDate = getCalendarFormatedDate(submissionGregDate);
+        }
+
+        var button = getCalendarButton(courseName + " - " + assignmentName, submissionDate+ "/" + dueDate);
+        
+        // find div with role="main"
+        var divs = document.querySelectorAll("div[role='main']");
+        if (divs.length == 0) return;
+        // add button to the div with role="main" as the first child
+        divs[0].prepend(button);
+    }
+
     var url = window.location.href;
     // if we are in a course page
     if(url.includes("course/view.php")){
@@ -156,6 +354,8 @@
         addCourseDescription();
         addNoticeBoard();
         addAssignmentsDetails();
+    } else if (url.includes("assign/view.php")){
+        addCalendarButton();
     }
     fixDropdownMenuWidth();
 })();
