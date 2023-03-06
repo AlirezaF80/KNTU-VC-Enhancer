@@ -154,55 +154,49 @@ JalaliDate.toGregorian = function(j_y, j_m, j_d) {
         if(h1s.length == 0) return;
         h1s[0].innerHTML += " - " + teacherName;
     }
-    function addAssignmentsDetails(){
-        // first find all divs with class="activityinstance"
-        var divs = document.getElementsByClassName("activityinstance");
-        if (divs.length == 0) return;
-        // for each div, find the first a tag, get the href attribute
-        for (var i = 0; i < divs.length; i++) {
-            (function(i) {
-              var as = divs[i].getElementsByTagName("a");
-              if (as.length == 0) return;
-              var url = as[0].href;
-              if (!url.includes('mod/assign')) return;
-              getHTMLDoc(url, function(doc) {
-                    var submissionstatustable = doc.getElementsByClassName("submissionstatustable");
-                    if (submissionstatustable.length == 0) return;
-                    var trs = submissionstatustable[0].getElementsByTagName("tr");
-                    if (trs.length < 4) return;
-                    // submittion status
-                    var tds = trs[0].getElementsByTagName("td");
-                    var status = tds[0].classList.contains("submissionstatussubmitted") ? "تحویل داده شده" : "تحویل داده نشده";
-                    as[0].innerHTML += " " + status;
-                    // submittion time
-                    tds = trs[3].getElementsByTagName("td");
-                    var classList = tds[0].classList;
-                    var backCol, fontCol;
-                    if (classList.contains("earlysubmission")) {
-                        // set color to green
+    function addAssignmentsDetails() {
+        const activities = document.querySelectorAll(".activityinstance");
+        if (activities.length == 0) return;
+        activities.forEach((activity) => {
+            const links = activity.querySelectorAll("a");
+            if (links.length == 0) return;
+            const url = links[0].href;
+            if (!url.includes("mod/assign")) return;
+            getHTMLDoc(url, (doc) => {
+                const submissionStatusTable = doc.querySelector(".submissionstatustable");
+                if (!submissionStatusTable) return;
+                const rows = submissionStatusTable.querySelectorAll("tr");
+                if (rows.length < 4) return;
+                let cells = rows[0].querySelectorAll("td");
+                const status = cells[0].classList.contains("submissionstatussubmitted") ? "تحویل داده شده" : "تحویل داده نشده";
+                links[0].innerHTML += ` - ${status}`;
+                cells = rows[3].querySelectorAll("td");
+                const classList = cells[0].classList;
+                let backCol, fontCol;
+                switch (true) {
+                    case classList.contains("earlysubmission"):
                         backCol = "#cfefcf";
                         fontCol = "#0f4d0f";
-                    } else if (classList.contains("latesubmission")) {
-                        // set color to yellow
-                        as[0].innerHTML += " (با تاخیر)";
+                        break;
+                    case classList.contains("latesubmission"):
+                        links[0].innerHTML += " (با تاخیر)";
                         backCol = "#ffff99";
                         fontCol = "#666600";
-                    } else if (classList.contains("overdue")) {
-                        // set color to red
+                        break;
+                    case classList.contains("overdue"):
                         backCol = "#efcfcf";
                         fontCol = "#660000";
-                    }
-                    if (backCol != null && fontCol != null) {
-                        divs[i].style.backgroundColor = backCol;
-                        as[0].style.color = fontCol;
-                    }
-                    // submission date
-                    var tds2 = trs[2].getElementsByTagName("td");
-                    var submissionDate = tds2[0].innerText;
-                    as[0].innerHTML += " - " + submissionDate;
-              });
-            })(i);
-          }
+                        break;
+                }
+                if (backCol && fontCol) {
+                    activity.style.backgroundColor = backCol;
+                    links[0].style.color = fontCol;
+                }
+                cells = rows[2].querySelectorAll("td");
+                const submissionDate = cells[0].innerText;
+                links[0].innerHTML += ` - ${submissionDate}`;
+            });
+        });
     }
 
     function getCalendarButton(name, date){
