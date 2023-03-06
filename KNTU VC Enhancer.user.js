@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KNTU VC Enhancer
 // @namespace    http://vc.kntu.ac.ir/
-// @version      0.5
+// @version      0.5.1
 // @description  Adds new features and fixes bugs of KNTU VC
 // @author       AlirezaF
 // @match        *://vc4012.kntu.ac.ir/*
@@ -94,21 +94,18 @@ JalaliDate.toGregorian = function(j_y, j_m, j_d) {
     function addNoticeBoard(){
         // add notice board's page details inside the course's page
         // first find the url of the notice board's page
-        var noticeBoardUrl = null;
+        let noticeBoardUrl = null;
         // find li with class="activity forum modtype_forum" and get the first a tag
-        var lis = document.getElementsByClassName("activity forum modtype_forum");
-        if(lis.length > 0){
-            var as = lis[0].getElementsByTagName("a");
-            if(as.length > 0) noticeBoardUrl = as[0].href;
-        }
-        if(noticeBoardUrl == null) return;
-
-        getHTMLDoc(noticeBoardUrl, function(doc){
+        const forums = document.querySelectorAll(".activity.forum.modtype_forum");
+        noticeBoardUrl = forums[0]?.querySelector("a")?.href ?? null;
+        if (noticeBoardUrl == null) return;
+    
+        getHTMLDoc(noticeBoardUrl, (doc) => {
             // get the div with role="main" inside noticeBoardUrl
-            var mainDiv = doc.querySelector("div[role='main']");
+            const mainDiv = doc.querySelector("div[role='main']");
             // add the mainDiv to the current page
-            var mainDivs = document.querySelectorAll("div[class='course-content']");
-            // add the mainDiv as the first child of the first mainDiv
+            const mainDivs = document.querySelectorAll("div[class='course-content']");
+            // add the mainDiv as the last child of the first mainDiv
             mainDivs[0].prepend(mainDiv);
         });
     }
