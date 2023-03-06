@@ -8,8 +8,8 @@ This is a userscript that enhances the experience of using the KNTU VC.
 - Fixes the dropdown menu to prevent it from getting cut off.
 - Adds the notice board's page details inside the course page for easy access.
 - Adds Class Schedule and Exam Schedule to the header.
-- Adds Teacher's name alongside the course name in the course page.
-- Adds Assignment Submission Status in the course page.
+- Adds Course and Teacher's name in each course's page.
+- Adds Assignments Submission Status in each course's page.
 - Adds an "Add to Calendar" button to assignments' pages. (Experimental)
 
 **Note: Be careful when using this button. It is experimental and dates may be wrong. It is recommended to check the dates before adding them to your calendar.**
