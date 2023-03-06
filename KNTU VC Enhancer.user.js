@@ -84,7 +84,7 @@ JalaliDate.toGregorian = function(j_y, j_m, j_d) {
         };
         xhr.send();
     }
-    function fixDropdownMenuWidth() {
+    function fixDropdownMenuWidth(){
         // find all divs with class="dropdown-menu ..."
         var divs = document.getElementsByClassName("dropdown-menu")
         // for(var i = 0; i < 1; i++) {
@@ -112,22 +112,19 @@ JalaliDate.toGregorian = function(j_y, j_m, j_d) {
     function addCourseDescription(){
         // get course description
         // find div with class="coursesummary"
-        var divs = document.getElementsByClassName("coursesummary");
-        if(divs.length == 0) return;
+        const courseSummaryDivs = document.querySelectorAll(".coursesummary");
         // find div with class="text_to_html"
-        var divs2 = divs[0].getElementsByClassName("text_to_html");
-        if(divs2.length == 0) return;
-        var courseDescription = divs2[0].innerHTML;
+        const courseDescription = courseSummaryDivs[0]?.querySelector(".text_to_html")?.innerHTML ?? "";
         // add course description to the page
         // add a ul with class="breadcrumb" to div with id="page-navbar"
-        var ul = document.createElement("ul");
+        const ul = document.createElement("ul");
         ul.setAttribute("class", "breadcrumb");
         // add course description to the ul
-        var li = document.createElement("li");
+        const li = document.createElement("li");
         li.innerHTML = courseDescription;
         ul.appendChild(li);
-        var divs3 = document.getElementById("page-navbar");
-        divs3.appendChild(ul);
+        const navbarDiv = document.getElementById("page-navbar");
+        navbarDiv.appendChild(ul);
     }
     function addTeacherName(){
         // get teacher name
@@ -151,7 +148,7 @@ JalaliDate.toGregorian = function(j_y, j_m, j_d) {
         if(h1s.length == 0) return;
         h1s[0].innerHTML += " - " + teacherName;
     }
-    function addAssignmentsDetails() {
+    function addAssignmentsDetails(){
         const activities = document.querySelectorAll(".activityinstance");
         if (activities.length == 0) return;
         activities.forEach((activity) => {
